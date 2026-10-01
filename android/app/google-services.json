@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "490493210567",
+    "project_id": "aurazone-admin",
+    "storage_bucket": "aurazone-admin.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:490493210567:android:f91f6fc6d080ebd2c1f3e2",
+        "android_client_info": {
+          "package_name": "com.aurazone.aurazone_admin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmxtLeFQEme8ULvAceTql9JzuFQZbFk8I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
