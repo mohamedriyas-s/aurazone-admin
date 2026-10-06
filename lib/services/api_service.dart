@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config.dart';
 
 class ApiService {
+  static http.Client client = http.Client();
+
   static Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
@@ -21,7 +23,7 @@ class ApiService {
 
     try {
       final url = Uri.parse('${ApiConfig.baseUrl}/auth/refresh');
-      final response = await http.post(
+      final response = await client.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'refreshToken': refreshToken}),
@@ -56,25 +58,25 @@ class ApiService {
 
   static Future<http.Response> get(String endpoint) async {
     final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
-    final response = await http.get(url, headers: await _getHeaders());
-    return _handleResponse(response, () async => await http.get(url, headers: await _getHeaders()));
+    final response = await client.get(url, headers: await _getHeaders());
+    return _handleResponse(response, () async => await client.get(url, headers: await _getHeaders()));
   }
 
   static Future<http.Response> post(String endpoint, Map<String, dynamic> body) async {
     final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
-    final response = await http.post(url, headers: await _getHeaders(), body: jsonEncode(body));
-    return _handleResponse(response, () async => await http.post(url, headers: await _getHeaders(), body: jsonEncode(body)));
+    final response = await client.post(url, headers: await _getHeaders(), body: jsonEncode(body));
+    return _handleResponse(response, () async => await client.post(url, headers: await _getHeaders(), body: jsonEncode(body)));
   }
 
   static Future<http.Response> put(String endpoint, Map<String, dynamic> body) async {
     final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
-    final response = await http.put(url, headers: await _getHeaders(), body: jsonEncode(body));
-    return _handleResponse(response, () async => await http.put(url, headers: await _getHeaders(), body: jsonEncode(body)));
+    final response = await client.put(url, headers: await _getHeaders(), body: jsonEncode(body));
+    return _handleResponse(response, () async => await client.put(url, headers: await _getHeaders(), body: jsonEncode(body)));
   }
 
   static Future<http.Response> delete(String endpoint) async {
     final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
-    final response = await http.delete(url, headers: await _getHeaders());
-    return _handleResponse(response, () async => await http.delete(url, headers: await _getHeaders()));
+    final response = await client.delete(url, headers: await _getHeaders());
+    return _handleResponse(response, () async => await client.delete(url, headers: await _getHeaders()));
   }
 }
