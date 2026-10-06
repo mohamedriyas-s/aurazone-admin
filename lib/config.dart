@@ -1,5 +1,5 @@
 class ApiConfig {
-  // We've set up ADB Reverse so your physical device can connect to your PC's localhost!
-  // If you switch back to the Android emulator, change this back to 'http://10.0.2.2:4000/api/v1'
-  static const String baseUrl = 'http://127.0.0.1:4000/api/v1'; 
+  // Using 192.168.1.23 for physical device testing over local network
+  // Make sure your phone is connected to the same Wi-Fi as your computer
+  static const String baseUrl = 'http://192.168.1.23:4000/api/v1'; 
 }
