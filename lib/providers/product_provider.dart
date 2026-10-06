@@ -72,7 +72,7 @@ class ProductProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await ApiService.get('/admin/products');
+      final response = await ApiService.get('/admin/products?take=1000');
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         List<dynamic> items = [];

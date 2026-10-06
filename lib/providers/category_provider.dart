@@ -19,7 +19,7 @@ class CategoryProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final endpoint = storeId != null ? '/admin/categories?storeId=$storeId' : '/admin/categories';
+      final endpoint = storeId != null ? '/admin/categories?storeId=$storeId&take=1000' : '/admin/categories?take=1000';
       final response = await ApiService.get(endpoint);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
