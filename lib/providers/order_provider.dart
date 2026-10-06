@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../models/models.dart';
@@ -28,16 +29,30 @@ class OrderProvider extends ChangeNotifier {
   int get pendingOrders => _orders.where((o) => o.status == OrderStatus.pending).length;
   int get deliveredOrders => _orders.where((o) => o.status == OrderStatus.delivered).length;
 
+  Timer? _pollingTimer;
+
   OrderProvider() {
     fetchOrders();
+    // Poll for new orders every 15 seconds for a "real-time" feel without WebSockets
+    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      fetchOrders(silent: true);
+    });
   }
 
-  Future<void> fetchOrders() async {
-    _isLoading = true;
-    notifyListeners();
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> fetchOrders({bool silent = false}) async {
+    if (!silent) {
+      _isLoading = true;
+      notifyListeners();
+    }
 
     try {
-      final response = await ApiService.get('/admin/orders');
+      final response = await ApiService.get('/admin/orders?take=1000');
       if (response.statusCode == 200) {
         // Assume API returns standard paginated response { data: { items: [...] } }
         final data = json.decode(response.body);
@@ -48,11 +63,15 @@ class OrderProvider extends ChangeNotifier {
            items = data;
         }
 
-        // We'd map to Order models here, assuming a simplified fromMap exists
-        // Since we didn't add Order.fromMap, let's keep the list empty for now
-        // if no real orders exist or we'll map them if the class supports it.
-        // For now, let's just clear static data.
-        _orders = [];
+        List<Order> parsedOrders = [];
+        for (var e in items) {
+          try {
+            parsedOrders.add(Order.fromMap(e));
+          } catch (err, stack) {
+            debugPrint('Error parsing order ${e["id"]}: $err\n$stack');
+          }
+        }
+        _orders = parsedOrders;
       } else {
         debugPrint('Failed to load orders: ${response.body}');
       }
