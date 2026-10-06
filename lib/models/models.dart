@@ -104,7 +104,7 @@ class ProductVariant {
       'isAvailable': isAvailable,
       'quantity': quantity,
       'attributes': attributes.map((x) => x.toMap()).toList(),
-      'imageUrls': imageUrls,
+      'images': imageUrls.map((url) => {'url': url}).toList(),
     };
   }
 
@@ -234,8 +234,8 @@ class Product {
               ?.map((x) => ProductVariant.fromMap(x))
               .toList() ??
           [],
-      createdAt: map['createdAt'] != null ? DateTime.parse(map['createdAt']) : null,
-      updatedAt: map['updatedAt'] != null ? DateTime.parse(map['updatedAt']) : null,
+      createdAt: map['createdAt'] != null ? DateTime.parse(map['createdAt']).toLocal() : null,
+      updatedAt: map['updatedAt'] != null ? DateTime.parse(map['updatedAt']).toLocal() : null,
     );
   }
 }
@@ -268,6 +268,18 @@ class OrderItem {
     required this.size,
     required this.color,
   });
+
+  factory OrderItem.fromMap(Map<String, dynamic> map) {
+    return OrderItem(
+      productId: map['variant']?['productId'] ?? '',
+      productName: map['productName'] ?? (map['variant'] != null && map['variant']['product'] != null ? map['variant']['product']['name'] : ''),
+      productImage: map['imageUrl'] ?? (map['variant'] != null && map['variant']['images'] != null && (map['variant']['images'] as List).isNotEmpty ? map['variant']['images'][0]['url'] : ''),
+      price: map['price'] != null ? (double.tryParse(map['price'].toString()) ?? 0.0) : 0.0,
+      quantity: map['quantity'] ?? 1,
+      size: map['attributesSnapshot'] != null && map['attributesSnapshot'] is Map ? (map['attributesSnapshot']['size'] ?? '') : '',
+      color: map['attributesSnapshot'] != null && map['attributesSnapshot'] is Map ? (map['attributesSnapshot']['color'] ?? '') : '',
+    );
+  }
 
   double get total => price * quantity;
 }
@@ -323,6 +335,39 @@ class Order {
       trackingNumber: trackingNumber ?? this.trackingNumber,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
+    );
+  }
+
+  factory Order.fromMap(Map<String, dynamic> map) {
+    return Order(
+      id: map['id'] ?? '',
+      userId: map['userId'] ?? (map['user'] != null ? map['user']['id'] : ''),
+      userName: map['user'] != null ? (map['user']['fullName'] ?? 'Unknown User') : 'Guest',
+      userEmail: map['user'] != null ? (map['user']['email'] ?? '') : '',
+      items: map['items'] != null ? List<OrderItem>.from(map['items'].map((x) => OrderItem.fromMap(x))) : [],
+      subtotal: map['subtotal'] != null 
+          ? (double.tryParse(map['subtotal'].toString()) ?? 0.0) 
+          : (map['items'] != null ? (map['items'] as List).fold(0.0, (sum, i) => sum + (double.tryParse(i['subtotal']?.toString() ?? '0') ?? 0.0)) : 0.0),
+      shippingCost: map['shippingCost'] != null ? (double.tryParse(map['shippingCost'].toString()) ?? 0.0) : 0.0,
+      tax: map['tax'] != null ? (double.tryParse(map['tax'].toString()) ?? 0.0) : 0.0,
+      total: map['totalAmount'] != null ? (double.tryParse(map['totalAmount'].toString()) ?? 0.0) : 0.0,
+      status: (() {
+        switch ((map['status'] ?? '').toString().toUpperCase()) {
+          case 'RECEIVED': return OrderStatus.confirmed;
+          case 'SHIPPED': return OrderStatus.shipped;
+          case 'DELIVERED': return OrderStatus.delivered;
+          case 'SUCCESS': return OrderStatus.delivered;
+          case 'FAILED': return OrderStatus.cancelled;
+          case 'CANCELLED': return OrderStatus.cancelled;
+          default: return OrderStatus.pending;
+        }
+      })(),
+      shippingAddress: map['shippingAddress'] ?? (map['orderAddress'] != null 
+          ? [map['orderAddress']['addressLine1'], map['orderAddress']['city'], map['orderAddress']['state'], map['orderAddress']['postalCode']].where((e) => e != null && e.toString().trim().isNotEmpty).join(', ') 
+          : 'No Address'),
+      trackingNumber: map['trackingToken'],
+      createdAt: map['createdAt'] != null ? DateTime.parse(map['createdAt']).toLocal() : DateTime.now(),
+      updatedAt: map['updatedAt'] != null ? DateTime.parse(map['updatedAt']).toLocal() : DateTime.now(),
     );
   }
 }
