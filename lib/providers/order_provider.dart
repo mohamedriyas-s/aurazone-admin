@@ -31,12 +31,14 @@ class OrderProvider extends ChangeNotifier {
 
   Timer? _pollingTimer;
 
-  OrderProvider() {
+  OrderProvider({bool enablePolling = true}) {
     fetchOrders();
     // Poll for new orders every 15 seconds for a "real-time" feel without WebSockets
-    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (_) {
-      fetchOrders(silent: true);
-    });
+    if (enablePolling) {
+      _pollingTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+        fetchOrders(silent: true);
+      });
+    }
   }
 
   @override
