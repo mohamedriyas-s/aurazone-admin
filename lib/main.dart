@@ -9,7 +9,6 @@ import 'providers/category_provider.dart';
 import 'providers/order_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/admin/admin_shell.dart';
-import 'screens/user/user_shell.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 void main() async {
@@ -116,10 +115,73 @@ class _AuthGate extends StatelessWidget {
       );
     }
 
+    if (auth.isUnauthorized) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.gpp_bad_rounded,
+                  size: 120,
+                  color: AppColors.error,
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  '403 Forbidden',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Access Denied. You do not have the required permissions to view this app.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 48),
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      auth.dismissUnauthorized();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: const Text(
+                      'Back to Login',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     if (!auth.isLoggedIn) {
       return const LoginScreen();
     }
 
-    return auth.isAdmin ? const AdminShell() : const UserShell();
+    return const AdminShell();
   }
 }

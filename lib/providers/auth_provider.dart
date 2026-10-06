@@ -7,17 +7,33 @@ import '../services/api_service.dart';
 class AuthProvider extends ChangeNotifier {
   AppUser? _currentUser;
   bool _isLoading = false;
+  bool _isUnauthorized = false;
   String? _error;
 
   AppUser? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   bool get isLoggedIn => _currentUser != null;
   bool get isAdmin => _currentUser?.isAdmin ?? false;
+  bool get isUnauthorized => _isUnauthorized;
   String? get error => _error;
+
+  void triggerUnauthorized() {
+    _isUnauthorized = true;
+    notifyListeners();
+  }
+
+  void dismissUnauthorized() {
+    _isUnauthorized = false;
+    logout();
+  }
 
   Future<void> initialize() async {
     _isLoading = true;
     notifyListeners();
+
+    ApiService.onUnauthorized = () {
+      triggerUnauthorized();
+    };
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -34,12 +50,16 @@ class AuthProvider extends ChangeNotifier {
              role = UserRole.admin;
           }
 
-          _currentUser = AppUser(
-            id: data['id'],
-            email: data['email'],
-            name: data['fullName'] ?? '',
-            role: role,
-          );
+          if (role == UserRole.user) {
+            _isUnauthorized = true;
+          } else {
+            _currentUser = AppUser(
+              id: data['id'],
+              email: data['email'],
+              name: data['fullName'] ?? '',
+              role: role,
+            );
+          }
         } else {
           // Token might be invalid
           await prefs.remove('auth_token');
@@ -57,6 +77,7 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     _error = null;
+    _isUnauthorized = false;
     notifyListeners();
 
     try {
@@ -75,6 +96,13 @@ class AuthProvider extends ChangeNotifier {
         UserRole role = UserRole.user;
         if (user['role'] == 'SUPER_ADMIN' || user['role'] == 'STORE_MANAGER') {
            role = UserRole.admin;
+        }
+
+        if (role == UserRole.user) {
+          _isUnauthorized = true;
+          _isLoading = false;
+          notifyListeners();
+          return false;
         }
 
         _currentUser = AppUser(
