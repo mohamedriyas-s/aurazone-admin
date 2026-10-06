@@ -45,13 +45,19 @@ class ApiService {
     return false;
   }
 
+  static void Function()? onUnauthorized;
+
   static Future<http.Response> _handleResponse(http.Response response, Future<http.Response> Function() retry) async {
     // If we get a 401 Unauthorized, try to refresh the token and retry the request
     if (response.statusCode == 401) {
       final refreshed = await _refreshToken();
       if (refreshed) {
         return await retry();
+      } else {
+        onUnauthorized?.call();
       }
+    } else if (response.statusCode == 403) {
+      onUnauthorized?.call();
     }
     return response;
   }
