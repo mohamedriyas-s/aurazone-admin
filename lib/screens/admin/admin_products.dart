@@ -805,7 +805,22 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     List<ProductVariant> generatedVariants = [];
     for (var size in sizes) {
       for (var color in colors) {
+        String? existingId;
+        if (widget.product != null && widget.product!.variants.isNotEmpty) {
+          final match = widget.product!.variants.where((v) {
+            final hasSize = v.attributes.any((a) => a.key == 'Size' && a.value == size);
+            final hasColor = v.attributes.any((a) => a.key == 'Color' && a.value == color);
+            return hasSize && hasColor;
+          }).toList();
+          if (match.isNotEmpty) {
+            existingId = match.first.id;
+          } else if (widget.product!.variants.length == 1 && sizes.length == 1 && colors.length == 1) {
+            existingId = widget.product!.variants.first.id;
+          }
+        }
+
         generatedVariants.add(ProductVariant(
+          id: existingId,
           sku: '${_nameController.text.trim().replaceAll(' ', '-').toUpperCase()}-$size-$color',
           price: price,
           compareAtPrice: originalPrice,
@@ -823,7 +838,8 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     final catProvider = context.read<CategoryProvider>();
     
     final storeId = _selectedStoreId ?? (storeProvider.stores.isNotEmpty ? storeProvider.stores.first.id : '');
-    final catId = _selectedCategoryId ?? (catProvider.categories.isNotEmpty ? catProvider.categories.first.id : '');
+    final storeCategories = catProvider.categories.where((c) => c.storeId == storeId).toList();
+    final catId = _selectedCategoryId ?? (storeCategories.isNotEmpty ? storeCategories.first.id : '');
 
     if (storeId.isEmpty || catId.isEmpty) {
       setState(() { _isSaving = false; });
