@@ -180,9 +180,45 @@ class ProductProvider extends ChangeNotifier {
   }
 
   Future<void> updateStock(String productId, int newQuantity) async {
-    // Note: Stock is tied to variants in the backend now. 
-    // This method will need to be updated to target a specific variant ID.
-    debugPrint('updateStock not fully implemented for variants yet.');
+    final product = getProductById(productId);
+    if (product == null) {
+      debugPrint('updateStock: Product not found.');
+      return;
+    }
+
+    if (product.variants.isEmpty) {
+      debugPrint('updateStock: Cannot update stock for product without variants.');
+      return;
+    }
+
+    int stockPerVariant = newQuantity ~/ product.variants.length;
+    if (stockPerVariant == 0 && newQuantity > 0) stockPerVariant = 1;
+
+    List<ProductVariant> updatedVariants = [];
+    for (int i = 0; i < product.variants.length; i++) {
+      int variantQuantity = stockPerVariant;
+      
+      // If there's a remainder and this is the first variant, add the remainder to it.
+      if (i == 0 && newQuantity > 0) {
+        int remainder = newQuantity - (stockPerVariant * product.variants.length);
+        if (remainder > 0) {
+          variantQuantity += remainder;
+        }
+      } else if (newQuantity == 0) {
+        variantQuantity = 0;
+      }
+
+      updatedVariants.add(product.variants[i].copyWith(quantity: variantQuantity));
+    }
+
+    final updatedProduct = product.copyWith(variants: updatedVariants);
+
+    try {
+      await updateProduct(updatedProduct);
+      debugPrint('Successfully updated stock for product $productId');
+    } catch (e) {
+      debugPrint('Error updating stock: $e');
+    }
   }
 
   Product? getProductById(String id) {
