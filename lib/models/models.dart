@@ -95,6 +95,28 @@ class ProductVariant {
     this.imageUrls = const [],
   });
 
+  ProductVariant copyWith({
+    String? id,
+    String? sku,
+    double? price,
+    double? compareAtPrice,
+    bool? isAvailable,
+    int? quantity,
+    List<ProductVariantAttribute>? attributes,
+    List<String>? imageUrls,
+  }) {
+    return ProductVariant(
+      id: id ?? this.id,
+      sku: sku ?? this.sku,
+      price: price ?? this.price,
+      compareAtPrice: compareAtPrice ?? this.compareAtPrice,
+      isAvailable: isAvailable ?? this.isAvailable,
+      quantity: quantity ?? this.quantity,
+      attributes: attributes ?? this.attributes,
+      imageUrls: imageUrls ?? this.imageUrls,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       if (id != null) 'id': id,
@@ -196,6 +218,44 @@ class Product {
   })  : id = id ?? const Uuid().v4(),
         createdAt = createdAt ?? DateTime.now(),
         updatedAt = updatedAt ?? DateTime.now();
+
+  Product copyWith({
+    String? id,
+    String? storeId,
+    String? categoryId,
+    String? name,
+    String? brand,
+    String? modelNumber,
+    String? gender,
+    String? description,
+    String? shortDescription,
+    List<String>? tags,
+    bool? hasVariants,
+    bool? isActive,
+    bool? isFeatured,
+    List<ProductVariant>? variants,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      storeId: storeId ?? this.storeId,
+      categoryId: categoryId ?? this.categoryId,
+      name: name ?? this.name,
+      brand: brand ?? this.brand,
+      modelNumber: modelNumber ?? this.modelNumber,
+      gender: gender ?? this.gender,
+      description: description ?? this.description,
+      shortDescription: shortDescription ?? this.shortDescription,
+      tags: tags ?? this.tags,
+      hasVariants: hasVariants ?? this.hasVariants,
+      isActive: isActive ?? this.isActive,
+      isFeatured: isFeatured ?? this.isFeatured,
+      variants: variants ?? this.variants,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
