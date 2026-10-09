@@ -6,7 +6,9 @@ import '../../providers/product_provider.dart';
 import '../../models/models.dart';
 
 class AdminInventory extends StatefulWidget {
-  const AdminInventory({super.key});
+  final int initialTabIndex;
+  
+  const AdminInventory({super.key, this.initialTabIndex = 0});
 
   @override
   State<AdminInventory> createState() => _AdminInventoryState();
@@ -19,7 +21,7 @@ class _AdminInventoryState extends State<AdminInventory>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 3, vsync: this, initialIndex: widget.initialTabIndex);
   }
 
   @override
@@ -124,7 +126,7 @@ class _InventoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
+    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),

@@ -8,7 +8,7 @@ import '../../providers/order_provider.dart';
 import '../login_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
-  final Function(int)? onNavigateToTab;
+  final void Function(int, {int? subIndex})? onNavigateToTab;
 
   const AdminDashboard({super.key, this.onNavigateToTab});
 
@@ -17,7 +17,7 @@ class AdminDashboard extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final products = context.watch<ProductProvider>();
     final orders = context.watch<OrderProvider>();
-    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
+    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -176,7 +176,7 @@ class AdminDashboard extends StatelessWidget {
                           label: 'Low Stock',
                           value: '${products.lowStockProducts}',
                           subtitle: 'items',
-                          onTap: () => onNavigateToTab?.call(3),
+                          onTap: () => onNavigateToTab?.call(3, subIndex: 1), // Low stock tab
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -188,7 +188,7 @@ class AdminDashboard extends StatelessWidget {
                           label: 'Out of Stock',
                           value: '${products.outOfStockProducts}',
                           subtitle: 'items',
-                          onTap: () => onNavigateToTab?.call(3),
+                          onTap: () => onNavigateToTab?.call(3, subIndex: 2), // Out of stock tab
                         ),
                       ),
                     ],
@@ -454,7 +454,7 @@ class _RecentOrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
+    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2);
     final dateFormat = DateFormat('MMM dd, yyyy');
 
     return Container(

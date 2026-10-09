@@ -139,7 +139,7 @@ class _OrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
+    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2);
     final dateFormat = DateFormat('MMM dd, yyyy • hh:mm a');
 
     return GestureDetector(
@@ -361,7 +361,7 @@ class OrderDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final orderProv = context.watch<OrderProvider>();
     final order = orderProv.getOrderById(orderId);
-    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
+    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2);
     final dateFormat = DateFormat('MMMM dd, yyyy • hh:mm a');
 
     if (order == null) {

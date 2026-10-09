@@ -21,7 +21,7 @@ class _UserProductDetailState extends State<UserProductDetail> {
   @override
   Widget build(BuildContext context) {
     final product = context.watch<ProductProvider>().getProductById(widget.productId);
-    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
+    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2);
 
     if (product == null) {
       return Scaffold(
