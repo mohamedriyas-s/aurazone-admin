@@ -44,13 +44,7 @@ class ProductProvider extends ChangeNotifier {
   int get lowStockProducts => _products.where((p) => p.isLowStock).length;
   int get outOfStockProducts => _products.where((p) => p.isOutOfStock).length;
 
-  List<String> get categories {
-    final Set<String> cats = {'All', 'Fashion', 'Shoes', 'Cosmetics', 'Home', 'Sneakers', 'Sports', 'Boots'};
-    for (var p in _products) {
-      if (p.category.isNotEmpty) cats.add(p.category);
-    }
-    return cats.toList();
-  }
+
 
   static const List<String> genders = [
     'All', 'Men', 'Women', 'Unisex', 'Kids'
@@ -124,7 +118,14 @@ class ProductProvider extends ChangeNotifier {
       if (response.statusCode == 201 || response.statusCode == 200) {
         await fetchProducts(); // Refresh list
       } else {
-        throw Exception('Failed to add product: ${response.body}');
+        String errMsg = 'Failed to add product';
+        try {
+          final body = json.decode(response.body);
+          if (body['message'] != null) {
+            errMsg = body['message'];
+          }
+        } catch (_) {}
+        throw errMsg;
       }
     } catch (e) {
       debugPrint('Error adding product: $e');
@@ -138,7 +139,14 @@ class ProductProvider extends ChangeNotifier {
       if (response.statusCode == 200) {
         await fetchProducts();
       } else {
-        throw Exception('Failed to update product: ${response.body}');
+        String errMsg = 'Failed to update product';
+        try {
+          final body = json.decode(response.body);
+          if (body['message'] != null) {
+            errMsg = body['message'];
+          }
+        } catch (_) {}
+        throw errMsg;
       }
     } catch (e) {
       debugPrint('Error updating product: $e');
@@ -153,10 +161,17 @@ class ProductProvider extends ChangeNotifier {
         _products.removeWhere((p) => p.id == productId);
         notifyListeners();
       } else {
-        throw Exception('Failed to delete product: ');
+        String errMsg = 'Failed to delete product';
+        try {
+          final body = json.decode(response.body);
+          if (body['message'] != null) {
+            errMsg = body['message'];
+          }
+        } catch (_) {}
+        throw errMsg;
       }
     } catch (e) {
-      debugPrint('Error deleting product: ');
+      debugPrint('Error deleting product: $e');
       rethrow;
     }
   }

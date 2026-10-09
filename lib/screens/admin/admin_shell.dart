@@ -14,14 +14,22 @@ class AdminShell extends StatefulWidget {
 
 class _AdminShellState extends State<AdminShell> {
   int _currentIndex = 0;
+  int _inventoryTabIndex = 0;
 
   List<Widget> get _pages => [
-    AdminDashboard(onNavigateToTab: (index) {
-      setState(() => _currentIndex = index);
+    AdminDashboard(onNavigateToTab: (index, {int? subIndex}) {
+      setState(() {
+        _currentIndex = index;
+        if (index == 3 && subIndex != null) {
+          _inventoryTabIndex = subIndex;
+        } else if (index == 3) {
+          _inventoryTabIndex = 0;
+        }
+      });
     }),
     const AdminProducts(),
     const AdminOrders(),
-    const AdminInventory(),
+    AdminInventory(key: ValueKey(_inventoryTabIndex), initialTabIndex: _inventoryTabIndex),
   ];
 
   @override
@@ -68,7 +76,12 @@ class _AdminShellState extends State<AdminShell> {
   Widget _buildNavItem(int index, IconData icon, String label) {
     final isActive = _currentIndex == index;
     return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () => setState(() {
+        _currentIndex = index;
+        if (index == 3) {
+          _inventoryTabIndex = 0;
+        }
+      }),
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
