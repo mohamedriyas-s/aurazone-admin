@@ -13,8 +13,22 @@ import '../../providers/category_provider.dart';
 import '../../models/models.dart';
 import '../../services/api_service.dart';
 
-class AdminProducts extends StatelessWidget {
+class AdminProducts extends StatefulWidget {
   const AdminProducts({super.key});
+
+  @override
+  State<AdminProducts> createState() => _AdminProductsState();
+}
+
+class _AdminProductsState extends State<AdminProducts> {
+  bool _isSearching = false;
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,17 +37,65 @@ class AdminProducts extends StatelessWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Products'),
+        title: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: _isSearching
+              ? Container(
+                  key: const ValueKey('searchContainer'),
+                  height: 40,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    onChanged: (v) => context.read<ProductProvider>().setSearchQuery(v),
+                    decoration: const InputDecoration(
+                      hintText: 'Search products...',
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      hintStyle: TextStyle(color: Colors.grey, fontSize: 15),
+                    ),
+                    style: const TextStyle(fontSize: 15),
+                    textAlignVertical: TextAlignVertical.center,
+                  ),
+                )
+              : const Text('Products', key: ValueKey('title')),
+        ),
         automaticallyImplyLeading: false,
         actions: [
-          IconButton(
-            onPressed: () => _showSearchSheet(context),
-            icon: const Icon(Icons.search_rounded),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: _isSearching
+                ? IconButton(
+                    key: const ValueKey('clearIcon'),
+                    onPressed: () {
+                      if (_searchController.text.isNotEmpty) {
+                        _searchController.clear();
+                        context.read<ProductProvider>().setSearchQuery('');
+                      } else {
+                        setState(() { _isSearching = false; });
+                        context.read<ProductProvider>().setSearchQuery('');
+                      }
+                    },
+                    icon: const Icon(Icons.close_rounded),
+                  )
+                : IconButton(
+                    key: const ValueKey('searchIcon'),
+                    onPressed: () {
+                      setState(() { _isSearching = true; });
+                    },
+                    icon: const Icon(Icons.search_rounded),
+                  ),
           ),
-          IconButton(
-            onPressed: () => _showFilterSheet(context),
-            icon: const Icon(Icons.tune_rounded),
-          ),
+          if (!_isSearching)
+            IconButton(
+              onPressed: () => _showFilterSheet(context),
+              icon: const Icon(Icons.tune_rounded),
+            ),
         ],
       ),
       body: products.products.isEmpty
@@ -102,58 +164,6 @@ class AdminProducts extends StatelessWidget {
     );
   }
 
-  void _showSearchSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return Container(
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 20,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
-          ),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                autofocus: true,
-                onChanged: (v) => context.read<ProductProvider>().setSearchQuery(v),
-                decoration: InputDecoration(
-                  hintText: 'Search products...',
-                  prefixIcon: const Icon(Icons.search_rounded),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.clear_rounded),
-                    onPressed: () {
-                      context.read<ProductProvider>().setSearchQuery('');
-                      Navigator.pop(ctx);
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   void _showFilterSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -193,18 +203,27 @@ class AdminProducts extends StatelessWidget {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: context.watch<ProductProvider>().categories.map((cat) {
-                  final isSelected =
-                      context.watch<ProductProvider>().selectedCategory == cat;
-                  return ChoiceChip(
-                    label: Text(cat),
-                    selected: isSelected,
+                children: [
+                  ChoiceChip(
+                    label: const Text('All'),
+                    selected: ctx.watch<ProductProvider>().selectedCategory == 'All',
                     selectedColor: AppColors.accent.withValues(alpha: 0.15),
                     onSelected: (_) {
-                      context.read<ProductProvider>().setCategory(cat);
+                      ctx.read<ProductProvider>().setCategory('All');
                     },
-                  );
-                }).toList(),
+                  ),
+                  ...ctx.watch<CategoryProvider>().categories.map((cat) {
+                    final isSelected = ctx.watch<ProductProvider>().selectedCategory == cat.id;
+                    return ChoiceChip(
+                      label: Text(cat.name),
+                      selected: isSelected,
+                      selectedColor: AppColors.accent.withValues(alpha: 0.15),
+                      onSelected: (_) {
+                        ctx.read<ProductProvider>().setCategory(cat.id);
+                      },
+                    );
+                  }),
+                ],
               ),
               const SizedBox(height: 20),
               const Text(
@@ -221,13 +240,13 @@ class AdminProducts extends StatelessWidget {
                 runSpacing: 8,
                 children: ProductProvider.genders.map((g) {
                   final isSelected =
-                      context.watch<ProductProvider>().selectedGender == g;
+                      ctx.watch<ProductProvider>().selectedGender == g;
                   return ChoiceChip(
                     label: Text(g),
                     selected: isSelected,
                     selectedColor: AppColors.accent.withValues(alpha: 0.15),
                     onSelected: (_) {
-                      context.read<ProductProvider>().setGender(g);
+                      ctx.read<ProductProvider>().setGender(g);
                     },
                   );
                 }).toList(),
@@ -295,7 +314,7 @@ class _ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 0);
+    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -1065,8 +1084,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
               controller: _nameController,
               maxLength: 100,
               decoration: const InputDecoration(hintText: 'e.g. AuraRunner Pro X'),
-              validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Name is required' : null,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'Name is required';
+                if (!RegExp(r'^[a-zA-Z0-9\s\-&.,]+$').hasMatch(v)) {
+                  return 'Only English letters, numbers, and basic punctuation are allowed';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 20),
 
@@ -1104,8 +1128,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                           if (v == null || v.trim().isEmpty) {
                             return 'Required';
                           }
-                          if (double.tryParse(v.trim()) == null) {
+                          final parsed = double.tryParse(v.trim());
+                          if (parsed == null) {
                             return 'Invalid';
+                          }
+                          if (parsed <= 0) {
+                            return 'Must be > 0';
                           }
                           return null;
                         },
@@ -1127,6 +1155,13 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
                         decoration: const InputDecoration(
                           hintText: 'Optional',
                         ),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return null;
+                          final parsed = double.tryParse(v.trim());
+                          if (parsed == null) return 'Invalid';
+                          if (parsed <= 0) return 'Must be > 0';
+                          return null;
+                        },
                       ),
                     ],
                   ),

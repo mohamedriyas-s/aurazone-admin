@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../../theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
+import '../../providers/category_provider.dart';
+import '../../models/models.dart';
 import 'user_product_detail.dart';
 import '../login_screen.dart';
 
@@ -165,34 +167,57 @@ class _UserHomeState extends State<_UserHome> {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                children: context.watch<ProductProvider>().categories.map((cat) {
-                  final isSelected = _selectedCategory == cat;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedCategory = cat),
+                children: [
+                  GestureDetector(
+                    onTap: () => setState(() => _selectedCategory = 'All'),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       margin: const EdgeInsets.only(right: 8),
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary : Colors.white,
+                        color: _selectedCategory == 'All' ? AppColors.primary : Colors.white,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: isSelected ? AppColors.primary : AppColors.border,
+                          color: _selectedCategory == 'All' ? AppColors.primary : AppColors.border,
                         ),
                       ),
                       child: Text(
-                        cat,
+                        'All',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color:
-                              isSelected ? Colors.white : AppColors.textSecondary,
+                          color: _selectedCategory == 'All' ? Colors.white : AppColors.textSecondary,
                         ),
                       ),
                     ),
-                  );
-                }).toList(),
+                  ),
+                  ...context.watch<CategoryProvider>().categories.map((cat) {
+                    final isSelected = _selectedCategory == cat.id;
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedCategory = cat.id),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isSelected ? AppColors.primary : Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected ? AppColors.primary : AppColors.border,
+                          ),
+                        ),
+                        child: Text(
+                          cat.name,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: isSelected ? Colors.white : AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ],
               ),
             ),
           ),
@@ -207,7 +232,10 @@ class _UserHomeState extends State<_UserHome> {
                   Text(
                     _selectedCategory == 'All'
                         ? 'All Products'
-                        : _selectedCategory,
+                        : context.read<CategoryProvider>().categories.firstWhere(
+                            (c) => c.id == _selectedCategory,
+                            orElse: () => Category(id: '', storeId: '', name: 'Products', slug: '')
+                          ).name,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
@@ -389,7 +417,7 @@ class _UserProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currencyFormat =
-        NumberFormat.currency(symbol: '₹', decimalDigits: 0);
+        NumberFormat.currency(symbol: '₹', decimalDigits: 2);
 
     return GestureDetector(
       onTap: () => Navigator.push(
