@@ -191,23 +191,13 @@ class ProductProvider extends ChangeNotifier {
       return;
     }
 
-    int stockPerVariant = newQuantity ~/ product.variants.length;
-    if (stockPerVariant == 0 && newQuantity > 0) stockPerVariant = 1;
+    int totalVariants = product.variants.length;
+    int stockPerVariant = totalVariants > 0 ? newQuantity ~/ totalVariants : 0;
+    int remainder = totalVariants > 0 ? newQuantity % totalVariants : 0;
 
     List<ProductVariant> updatedVariants = [];
     for (int i = 0; i < product.variants.length; i++) {
-      int variantQuantity = stockPerVariant;
-      
-      // If there's a remainder and this is the first variant, add the remainder to it.
-      if (i == 0 && newQuantity > 0) {
-        int remainder = newQuantity - (stockPerVariant * product.variants.length);
-        if (remainder > 0) {
-          variantQuantity += remainder;
-        }
-      } else if (newQuantity == 0) {
-        variantQuantity = 0;
-      }
-
+      int variantQuantity = stockPerVariant + (i < remainder ? 1 : 0);
       updatedVariants.add(product.variants[i].copyWith(quantity: variantQuantity));
     }
 

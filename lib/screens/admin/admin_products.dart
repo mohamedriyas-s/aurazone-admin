@@ -622,8 +622,10 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     _selectedCategoryId = p?.categoryId;
     _selectedSizes = List.from(p?.sizes ?? []);
     _selectedColors = List.from(p?.colors ?? []);
-    _isGenderEnabled = p != null && p.gender.isNotEmpty && p.gender != 'Not Specified';
-    _selectedGender = _isGenderEnabled ? p!.gender : 'Men';
+    _isGenderEnabled = p != null && p.gender.isNotEmpty && p.gender != 'not specified' && p.gender != 'Not Specified';
+    _selectedGender = _isGenderEnabled 
+        ? p!.gender.substring(0, 1).toUpperCase() + p.gender.substring(1).toLowerCase() 
+        : 'Men';
     _imageUrls = List.from(p?.imageUrls ?? []);
   }
 
@@ -799,10 +801,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
     final totalStock = int.parse(_stockController.text.trim());
     
     // Simple variant generator
-    int stockPerVariant = totalStock ~/ (sizes.length * colors.length);
-    if (stockPerVariant == 0 && totalStock > 0) stockPerVariant = 1;
+    int totalVariants = sizes.length * colors.length;
+    int stockPerVariant = totalVariants > 0 ? totalStock ~/ totalVariants : 0;
+    int remainder = totalVariants > 0 ? totalStock % totalVariants : 0;
     
     List<ProductVariant> generatedVariants = [];
+    int variantIndex = 0;
     for (var size in sizes) {
       for (var color in colors) {
         String? existingId;
@@ -819,12 +823,15 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           }
         }
 
+        int qty = stockPerVariant + (variantIndex < remainder ? 1 : 0);
+        variantIndex++;
+
         generatedVariants.add(ProductVariant(
           id: existingId,
           sku: '${_nameController.text.trim().replaceAll(' ', '-').toUpperCase()}-$size-$color',
           price: price,
           compareAtPrice: originalPrice,
-          quantity: stockPerVariant,
+          quantity: qty,
           imageUrls: allImages,
           attributes: [
             ProductVariantAttribute(key: 'Size', value: size),
@@ -911,10 +918,12 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
       ),
       body: Form(
         key: _formKey,
-        child: ListView(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
-          children: [
-            // Images section
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Images section
             const Text(
               'Product Images',
               style: TextStyle(
@@ -1054,6 +1063,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
             const SizedBox(height: 8),
             TextFormField(
               controller: _nameController,
+              maxLength: 100,
               decoration: const InputDecoration(hintText: 'e.g. AuraRunner Pro X'),
               validator: (v) =>
                   v == null || v.trim().isEmpty ? 'Name is required' : null,
@@ -1233,7 +1243,7 @@ class _AddEditProductScreenState extends State<AddEditProductScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildLabel(String text) {
